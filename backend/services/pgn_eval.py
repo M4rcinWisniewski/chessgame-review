@@ -1,0 +1,34 @@
+import chess.pgn
+from chess import Board
+import json
+#json converter for now xd
+def create_game(): 
+    pgn_string ="""  [Event "Rated blitz game"]
+    [Site "https://lichess.org/jA9pyrQr"]
+    [Date "2025.04.30"]
+    [White "animalischunfassbare"]
+    [Black "Muslie"]
+    [Result "1-0"]
+    [GameId "jA9pyrQr"]
+    [UTCDate "2025.04.30"]
+    [UTCTime "20:57:40"]
+    [WhiteElo "1442"]
+    [BlackElo "1506"]
+    [WhiteRatingDiff "+7"]
+    [BlackRatingDiff "-13"]
+    [Variant "Standard"]
+    [TimeControl "180+0"]
+    [ECO "B10"] 
+    [Opening "Caro-Kann Defense"]
+    [Termination "Normal"]
+    [Annotator "lichess.org"]
+
+    1. e4 c6 2. Nc3 d5 { B10 Caro-Kann 
+    Defense } 3. exd5 cxd5 4. d4 Nf6 5. Nf3 Bf5
+    6. Bb5+ Nc6 7. Bf4 a6 8. Ba4 Qb6 9. Bb3 e6 10. O-O Bb4 11. Ne5 O-O 12. Bg5 Nxd4
+    13. Bxf6 gxf6 14. Nd7 { Black resigns. } 1-0"""
+
+
+    return json.dumps({"pgn": pgn_string})
+
+print(create_game())

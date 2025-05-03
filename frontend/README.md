@@ -1,1 +1,0 @@
-Chesscom-like game review made in typescript nextjs and python fastAPI 

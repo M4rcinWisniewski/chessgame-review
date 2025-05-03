@@ -1,43 +1,54 @@
 "use client"
 import Board from "@/components/Board";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import axios from "axios";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import Sidebar from "@/components/Sidebar";
+
 
 export default function ChessGame() {
-  const [gameInfo, setGameInfo] = useState<any>(null);
-
-  useEffect(() => {
-    axios.post("http://localhost:8000/PGN/")
-
+  const [pgn, setPgn] = useState<string>('start'); // Default to starting position
+  const [fen, setFen] = useState<string>('start');
+  const [moves, setMoves] = useState<string[]>([])
+  const postToServer = () => {
+    axios.post("http://localhost:8000/evaluate-pgn", { pgn })
       .then(response => {
-        console.log("Backend response:", response.data);
-        setGameInfo(response.data);
+        console.log("Evaluations:", response.data.evaluations);
+        console.log("Moves:", response.data.moves);
+        setFen(response.data.fen)
+        setMoves(response.data.moves)
       })
       .catch(error => {
-        console.error("Error fetching PGN data:", error);
+        console.error("Error:", error.response?.data || error.message);
       });
-  }, []);
-  const getResult = (result: string) => {
-    const splitResult: string[] = result.match(/\d+(\.\d+)?/g) || [];
+  };
+  const handleChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setPgn(event.target.value);
+  };
 
-    return {
-      white: splitResult[0],
-      black: splitResult[1]
-    }
-
-  } 
-
-  if (!gameInfo) return <p>Loading...</p>;
-  const results = getResult(gameInfo.result)
-  return (
-    <div className="flex h-screen items-center justify-center gap-2">
-    <div>
-      <p className="flex justify-between px-3">{gameInfo.white} <strong className="text-lg">{results.white}</strong></p>
-      <Board />
-      <p className="flex justify-between px-3">{gameInfo.black} <strong className="text-lg">{results.black}</strong></p>
-    </div>
-
-    
-  </div>
+  return (  
+    <main className="flex flex-col mt-2 md:flex-row justify-center items-start w-full h-[50%] gap-8 p-4">
+      <div className="flex items-center justify-center gap-4 flex-col">
+        <div className="flex justify-center w-full">
+          <Board position={fen} />
+        </div>
+        <Textarea
+          onChange={handleChange}
+          value={pgn === "start" ? "" : pgn}
+          className="text-white w-full"
+        />
+        <Button
+          onClick={postToServer}
+          variant={"destructive"}
+          className="w-full md:w-auto"
+        >
+          Button
+        </Button>
+      </div>
+      <div className="mt-1.5">
+        <Sidebar movesArray={moves} />
+      </div>
+    </main>
   );
 }
