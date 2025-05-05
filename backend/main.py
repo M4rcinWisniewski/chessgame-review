@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 import chess.pgn
 import io
-
+from stockfish import Stockfish
 app = FastAPI()
 
 app.add_middleware(
@@ -19,12 +19,29 @@ def clean_pgn(raw_pgn: str) -> str:
     lines = [line.strip() for line in raw_pgn.strip().splitlines()]
     return "\n".join(lines)
 
+def getResult(resultStr=""):
+
+    white = ""
+    black =""
+    temp = False
+    for i in resultStr:
+        if i != "-" and temp == False:
+            white += i
+        elif i =="-":
+            temp = not temp
+        elif i!= "-" and temp == True:
+            black += i
+    return {
+        "white": white,
+        "black": black
+    }
 
 class PGNRequest(BaseModel):
     pgn: str
 
+
 @app.post("/evaluate-pgn")
-def get_game_data(req: PGNRequest):
+def handle_game_data(req: PGNRequest):
     try:
         cleaned_pgn = clean_pgn(req.pgn)
         pgn = io.StringIO(cleaned_pgn)
@@ -36,14 +53,40 @@ def get_game_data(req: PGNRequest):
         board = game.board()
         san_moves = []
 
+        fen_positions = ["rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"]
         for move in game.mainline_moves():
             san_moves.append(board.san(move))
             board.push(move)
+            fen_positions.append(board.fen())
 
-        final_fen = board.fen()
+        stockfish = Stockfish("./stockfish/stockfish.exe", depth=15)
+        
+        evaluations = []
+        for fen in fen_positions:
+            stockfish.set_fen_position(fen)
+            eval_result = stockfish.get_evaluation()
+            
+            # Convert evaluation to consistent format (pawns)
+            if eval_result['type'] == 'cp':
+                score = eval_result['value'] / 100  # centipawns to pawns
+            else:  # It's a mate
+                score = 999 if eval_result['value'] > 0 else -999
+                
+            evaluations.append(score)
+        
         return {
-            "fen": final_fen,
-            "moves": san_moves
+            "fens": fen_positions,
+            "moves": san_moves,
+            "white_data": {
+                "name": game.headers["White"],
+                "elo": game.headers.get("WhiteElo", "Unknown") , 
+                },
+            "black_data": {
+                "name": game.headers["Black"],
+                "elo": game.headers.get("BlackElo", "????"),
+                },
+            "results": getResult(game.headers["Result"]),
+            "evaluations": evaluations
         }
 
     except Exception as e:
