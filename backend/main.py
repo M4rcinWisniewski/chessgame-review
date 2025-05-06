@@ -73,7 +73,16 @@ def handle_game_data(req: PGNRequest):
                 score = 999 if eval_result['value'] > 0 else -999
                 
             evaluations.append(score)
-        
+        mate_info = []
+        for fen in fen_positions:
+            stockfish.set_fen_position(fen)
+            eval_result = stockfish.get_evaluation()
+            
+            if eval_result['type'] == 'mate':
+                # Store the actual number of moves to mate
+                mate_info.append(eval_result['value'])
+            else:
+                mate_info.append(None)
         return {
             "fens": fen_positions,
             "moves": san_moves,
@@ -86,7 +95,8 @@ def handle_game_data(req: PGNRequest):
                 "elo": game.headers.get("BlackElo", "????"),
                 },
             "results": getResult(game.headers["Result"]),
-            "evaluations": evaluations
+            "evaluations": evaluations,
+            "mate_info": mate_info
         }
 
     except Exception as e:

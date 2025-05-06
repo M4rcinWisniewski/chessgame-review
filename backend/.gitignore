@@ -1,3 +1,4 @@
-/pgntest.txt/
+__pycache__/
 stockfish/
 services/
+pgntest.txt
