@@ -97,5 +97,3 @@ MIT License. Use it, modify it, improve it — just give credit.
 
     Built with ❤️ by Marcin Wiśniewski — because we love chess and code.
 
-
-### Let me know if you'd like me to add badges or a demo screenshot section.
